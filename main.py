@@ -65,10 +65,12 @@ def make_timePlotTEST():
     x = [i.split(" ") for i in data['Date/Time']]
     y = pd.DataFrame(columns=["date","time"])
     y.date = [i[0] for i in x]
-    y.time = [i[1] for i in x]
+    y.time = [i[1][0] for i in x]
+    days = y.groupby("date")
+    for i in days:
+        hours = i[1].groupby("time")
+        for h in hours: print(h)
 
-
-    print(y)
 
 make_timePlotTEST()
 # -------------------------- MAIN ---------------------------- #
