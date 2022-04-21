@@ -47,9 +47,9 @@ app.layout = html.Div([
 #  Make Basic Plot  #
 #####################
 
-@app.callback(
-    Output('figure-output', 'figure'),
-    Input('my-input', 'value'))
+# @app.callback(
+#     Output('figure-output', 'figure'),
+#     Input('my-input', 'value'))
 def make_plot(N):
     fig = go.Figure()
     fig.add_trace(go.Scatter(x=np.arange(N), y=np.random.rand(N),
@@ -60,11 +60,17 @@ def make_plot(N):
 
     return fig
 
-def make_timePlot():
-    fig = go.Figure
-    fig.add_trace(go.Histogram())
+def make_timePlotTEST():
+    data = pd.read_csv('uber-trip-data/uber-raw-data-apr14.csv')
+    x = [i.split(" ") for i in data['Date/Time']]
+    y = pd.DataFrame(columns=["date","time"])
+    y.date = [i[0] for i in x]
+    y.time = [i[1] for i in x]
 
 
+    print(y)
+
+make_timePlotTEST()
 # -------------------------- MAIN ---------------------------- #
 
 
