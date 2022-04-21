@@ -60,6 +60,10 @@ def make_plot(N):
 
     return fig
 
+def make_timePlot():
+    fig = go.Figure
+    fig.add_trace(go.Histogram())
+
 
 # -------------------------- MAIN ---------------------------- #
 
