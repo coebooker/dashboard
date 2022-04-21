@@ -62,14 +62,9 @@ def make_plot(N):
 
 def make_timePlotTEST():
     data = pd.read_csv('uber-trip-data/uber-raw-data-apr14.csv')
-    x = [i.split(" ") for i in data['Date/Time']]
-    y = pd.DataFrame(columns=["date","time"])
-    y.date = [i[0] for i in x]
-    y.time = [i[1][0] for i in x]
-    days = y.groupby("date")
-    for i in days:
-        hours = i[1].groupby("time")
-        for h in hours: print(h)
+    print(data.dtypes)
+    data["Date/Time"] = pd.to_datetime(data["Date/Time"])
+    print(data.dtypes)
 
 
 make_timePlotTEST()
