@@ -42,6 +42,8 @@ app.layout = html.Div([
     html.Br(),
 
     dcc.Graph(id='figure-output'),
+    
+    dcc.Graph(id = 'map-fig'),
 
 ])
 
@@ -61,13 +63,12 @@ def make_plotb(N):
     fig.update_layout(title="Model Output")
 
     return fig
-def make_map():
+def map_func():
     px.set_mapbox_access_token(open(".mapbox_token").read())
     df = data
     fig = px.scatter_mapbox(df, lat="centroid_lat", lon="centroid_lon",     color="peak_hour", size="car_hours",
                       color_continuous_scale=px.colors.cyclical.IceFire, size_max=15, zoom=10)
-    fig.show()
-
+    return fig
 
 
 @app.callback(
@@ -75,6 +76,9 @@ def make_map():
      [Input('my-input', 'value')])
 def make_plot(N):
     return make_timePlot(data, datetime.datetime(year=2014, month=4, day=N))
+Output('map-fig', 'figure')
+def make_map():
+    return map_func()
 
 
 def make_timePlot(data, date):
