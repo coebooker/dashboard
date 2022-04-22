@@ -55,7 +55,7 @@ data["Date/Time"] = pd.to_datetime(data["Date/Time"])
 
 @app.callback(
      Output('figure-output', 'figure'),
-     Input('my-input', 'value'))
+     [Input('my-input', 'value')])
 def make_plot(N):
     return make_timePlot(data, datetime.datetime(year=2014, month=4, day=N))
 
