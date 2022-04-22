@@ -52,6 +52,23 @@ app.layout = html.Div([
 data = pd.read_csv('uber-trip-data/uber-raw-data-apr14.csv')
 data["Date/Time"] = pd.to_datetime(data["Date/Time"])
 
+def make_plotb(N):
+    fig = go.Figure()
+    fig.add_trace(go.Scatter(x=np.arange(N), y=np.random.rand(N),
+                             mode='lines',
+                             name='Random Data'))
+
+    fig.update_layout(title="Model Output")
+
+    return fig
+def make_map():
+    px.set_mapbox_access_token(open(".mapbox_token").read())
+    df = data
+    fig = px.scatter_mapbox(df, lat="centroid_lat", lon="centroid_lon",     color="peak_hour", size="car_hours",
+                      color_continuous_scale=px.colors.cyclical.IceFire, size_max=15, zoom=10)
+    fig.show()
+
+
 
 @app.callback(
      Output('figure-output', 'figure'),
@@ -68,13 +85,12 @@ def make_timePlot(data, date):
 
     grouped = data.groupby(day).get_group(date).groupby(hour)
     y = [group[1]["Date/Time"].count() for group in grouped]
-    x = [group[0].hour for group in grouped]
+    x = [group[0].time() for group in grouped]
 
     dtplot.add_trace(go.Bar(x=x,y=y))
     dtplot.update_layout(title="Select any of the bars on the histogram to section data by time.")
     dtplot.update_layout(bargap=0)
-    dtplot.update_layout(colorway=px.colors.sequential.Viridis)
-    dtplot.update_coloraxes(colorscale=px.colors.sequential.Viridis, showscale=True)
+    dtplot.update_layout(colorscale=go.layout.Colorscale(sequential='viridis'))
     return dtplot
 
 # -------------------------- MAIN ---------------------------- #
