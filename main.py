@@ -1,4 +1,6 @@
 # Good modules to have
+from datetime import datetime
+
 import numpy as np, pandas as pd
 import random, json, time, os
 
@@ -10,6 +12,7 @@ import dash_core_components as dcc
 import dash_html_components as html
 from dash.dependencies import Input, Output
 
+import datetime
 # Add basic CSS
 external_stylesheets = ['https://codepen.io/chriddyp/pen/bWLwgP.css']
 
@@ -32,8 +35,8 @@ app.layout = html.Div([
     html.H6("Change below to make a new figure:"),
 
     html.Div([
-        "     Number of points, N=: ",
-        dcc.Input(id='my-input', value=10, type='number', debounce=True)
+        "     Day in 4 N=: ",
+        dcc.Input(id='my-input', value=1, type='number', debounce=True)
     ]),
 
     html.Br(),
@@ -46,11 +49,10 @@ app.layout = html.Div([
 #####################
 #  Make Basic Plot  #
 #####################
+data = pd.read_csv('uber-trip-data/uber-raw-data-apr14.csv')
+data["Date/Time"] = pd.to_datetime(data["Date/Time"])
 
-# @app.callback(
-#     Output('figure-output', 'figure'),
-#     Input('my-input', 'value'))
-def make_plot(N):
+def make_plotb(N):
     fig = go.Figure()
     fig.add_trace(go.Scatter(x=np.arange(N), y=np.random.rand(N),
                              mode='lines',
@@ -60,14 +62,30 @@ def make_plot(N):
 
     return fig
 
-def make_timePlotTEST():
-    data = pd.read_csv('uber-trip-data/uber-raw-data-apr14.csv')
-    print(data.dtypes)
-    data["Date/Time"] = pd.to_datetime(data["Date/Time"])
-    print(data.dtypes)
+
+@app.callback(
+     Output('figure-output', 'figure'),
+     Input('my-input', 'value'))
+def make_plot(N):
+    return make_timePlot(data, datetime.datetime(year=2014, month=4, day=N))
 
 
-make_timePlotTEST()
+def make_timePlot(data, date):
+    dtplot = go.Figure()
+
+    day = pd.Grouper(key="Date/Time", freq="D")
+    hour = pd.Grouper(key="Date/Time", freq="60min")
+
+    grouped = data.groupby(day).get_group(date).groupby(hour)
+    y = [group[1]["Date/Time"].count() for group in grouped]
+    x = [group[0].time() for group in grouped]
+
+    dtplot.add_trace(go.Bar(x=x,y=y))
+    dtplot.update_layout(title="Select any of the bars on the histogram to section data by time.")
+    dtplot.update_layout(bargap=0)
+    dtplot.update_layout(colorscale=go.layout.Colorscale(sequential='viridis'))
+    return dtplot
+
 # -------------------------- MAIN ---------------------------- #
 
 
