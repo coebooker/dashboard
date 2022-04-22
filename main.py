@@ -13,6 +13,7 @@ import dash_html_components as html
 from dash.dependencies import Input, Output
 
 import datetime
+
 # Add basic CSS
 external_stylesheets = ['https://codepen.io/chriddyp/pen/bWLwgP.css']
 
@@ -41,18 +42,18 @@ app.layout = html.Div([
 
     html.Br(),
 
+    dcc.Graph(id='map-fig'),
+
     dcc.Graph(id='figure-output'),
-    
-    dcc.Graph(id = 'map-fig'),
 
 ])
-
 
 #####################
 #  Make Basic Plot  #
 #####################
 data = pd.read_csv('uber-trip-data/uber-raw-data-apr14.csv')
 data["Date/Time"] = pd.to_datetime(data["Date/Time"])
+
 
 def make_plotb(N):
     fig = go.Figure()
@@ -63,25 +64,17 @@ def make_plotb(N):
     fig.update_layout(title="Model Output")
 
     return fig
+
+
 def map_func():
     px.set_mapbox_access_token(open(".mapbox_token").read())
     df = data
-    fig = px.scatter_mapbox(df, lat="centroid_lat", lon="centroid_lon",     color="peak_hour", size="car_hours",
-                      color_continuous_scale=px.colors.cyclical.IceFire, size_max=15, zoom=10)
+    fig = px.scatter_mapbox(df, lat="centroid_lat", lon="centroid_lon", color="peak_hour", size="car_hours",
+                            color_continuous_scale=px.colors.cyclical.IceFire, size_max=15, zoom=10)
     return fig
 
 
-@app.callback(
-     Output('figure-output', 'figure'),
-     [Input('my-input', 'value')])
-def make_plot(N):
-    return make_timePlot(data, datetime.datetime(year=2014, month=4, day=N))
-Output('map-fig', 'figure')
-def make_map():
-    return map_func()
-
-
-def make_timePlot(data, date):
+def make_timeplot(data, date):
     dtplot = go.Figure()
 
     day = pd.Grouper(key="Date/Time", freq="D")
@@ -90,12 +83,29 @@ def make_timePlot(data, date):
     grouped = data.groupby(day).get_group(date).groupby(hour)
     y = [group[1]["Date/Time"].count() for group in grouped]
     x = [group[0].time() for group in grouped]
+    color = [group[0].hour for group in grouped]
 
-    dtplot.add_trace(go.Bar(x=x,y=y))
+    dtplot.add_trace(go.Bar(x=x, y=y))
     dtplot.update_layout(title="Select any of the bars on the histogram to section data by time.")
     dtplot.update_layout(bargap=0)
-    dtplot.update_layout(colorscale=go.layout.Colorscale(sequential='viridis'))
+    temp = go.layout.Colorscale(sequential="viridis",diverging="viridis",sequentialminus="viridis")
+    dtplot.update_coloraxes(colorscale='Viridis')
     return dtplot
+
+
+@app.callback(
+    Output('figure-output', 'figure'),
+    [Input('my-input', 'value')])
+def make_plot(N):
+    return make_timeplot(data, datetime.datetime(year=2014, month=4, day=N))
+
+
+Output('map-fig', 'figure')
+
+
+def make_map():
+    return map_func()
+
 
 # -------------------------- MAIN ---------------------------- #
 
