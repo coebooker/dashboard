@@ -37,44 +37,38 @@ app.layout = html.Div([
 
     html.Div([
         "     Day in 4 N=: ",
-        dcc.Input(id='my-input', value=1, type='number', debounce=True)
+        dcc.Input(id='day-num', value=1, type='number', debounce=True)
+    ]),
+
+    html.Div([
+        dcc.Input(id='map-in', value=0, type='number', debounce=True)
     ]),
 
     html.Br(),
 
     dcc.Graph(id='map-fig'),
 
-    dcc.Graph(id='figure-output'),
+    dcc.Graph(id='time-plot'),
 
 ])
 
 #####################
 #  Make Basic Plot  #
 #####################
-data = pd.read_csv('uber-trip-data/uber-raw-data-apr14.csv')
-data["Date/Time"] = pd.to_datetime(data["Date/Time"])
-
-
-def make_plotb(N):
-    fig = go.Figure()
-    fig.add_trace(go.Scatter(x=np.arange(N), y=np.random.rand(N),
-                             mode='lines',
-                             name='Random Data'))
-
-    fig.update_layout(title="Model Output")
-
-    return fig
+UberData = pd.read_csv('uber-trip-data/uber-raw-data-apr14.csv')
+UberData["Date/Time"] = pd.to_datetime(UberData["Date/Time"])
 
 
 def map_func():
     px.set_mapbox_access_token(open(".mapbox_token").read())
-    df = data
+    df = UberData
     fig = px.scatter_mapbox(df, lat="centroid_lat", lon="centroid_lon", color="peak_hour", size="car_hours",
                             color_continuous_scale=px.colors.cyclical.IceFire, size_max=15, zoom=10)
     return fig
 
 
 def make_timeplot(data, date):
+
     dtplot = go.Figure()
 
     day = pd.Grouper(key="Date/Time", freq="D")
@@ -88,22 +82,23 @@ def make_timeplot(data, date):
     dtplot.add_trace(go.Bar(x=x, y=y))
     dtplot.update_layout(title="Select any of the bars on the histogram to section data by time.")
     dtplot.update_layout(bargap=0)
-    temp = go.layout.Colorscale(sequential="viridis",diverging="viridis",sequentialminus="viridis")
+    temp = go.layout.Colorscale(sequential="viridis", diverging="viridis", sequentialminus="viridis")
     dtplot.update_coloraxes(colorscale='Viridis')
     return dtplot
 
 
 @app.callback(
-    Output('figure-output', 'figure'),
-    [Input('my-input', 'value')])
+    Output('time-plot', 'figure'),
+    [Input('day-num', 'value')])
 def make_plot(N):
-    return make_timeplot(data, datetime.datetime(year=2014, month=4, day=N))
+    return make_timeplot(UberData, datetime.datetime(year=2014, month=4, day=N))
 
 
-Output('map-fig', 'figure')
-
-
-def make_map():
+@app.callback(
+    Output('map-fig', 'figure'),
+    [Input('map-in', 'value')]
+)
+def make_map(mapIn):
     return map_func()
 
 
