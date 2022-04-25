@@ -72,13 +72,16 @@ def make_timeplot(data, date):
     hour = pd.Grouper(key="Date/Time", freq="60min")
 
     grouped = data.groupby(day).get_group(date).groupby(hour)
+
     y = [group[1]["Date/Time"].count() for group in grouped]
-    x = pd.Series([group[0].hour for group in grouped])
-    color = [str(group[0].hour) + ":00" for group in grouped]
+    x = [group[0].hour for group in grouped]
+    X_BINS = [str(i)+":00" for i in range(0,24)]
 
-    temp = go.bar.Marker(cauto=True, cmax=0, cmin=23, colorscale="Viridis_r")
+    temp = go.Bar(x=X_BINS, y=y)
 
-    dtplot.add_trace(go.Histogram(x nbinsx=24))
+    #temp = go.Histogram(x=grouped["Date/Time"], nbinsx=24, histfunc='count', marker=go.histogram.Marker(cauto=True, colorscale="Viridis_r"))
+
+    dtplot.add_trace(temp)
     dtplot.update_layout(title="Select any of the bars on the histogram to section data by time.")
     dtplot.update_layout(bargap=0)
 
