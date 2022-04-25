@@ -30,14 +30,11 @@ app.config.suppress_callback_exceptions = True
 
 app.layout = html.Div([
 
-    html.H1(children='Super Simple Dash App!'),
-    html.H2(children='This is an example of a dash app with an interactive dashboard.'),
-
-    html.H6("Change below to make a new figure:"),
+    html.H3(children='Dash-Uber Data App'),
+    html.H6(children='Select different days using the date picker or by selecting different time frames on the histogram.'),
 
     html.Div([
-        "     Day in 4 N=: ",
-        dcc.Input(id='day-num', value=1, type='number', debounce=True)
+        dcc.DatePickerSingle(date=datetime.date.fromisoformat("2014-04-01"), id='date-pick')
     ]),
 
     html.Div([
@@ -76,22 +73,26 @@ def make_timeplot(data, date):
 
     grouped = data.groupby(day).get_group(date).groupby(hour)
     y = [group[1]["Date/Time"].count() for group in grouped]
-    x = [group[0].time() for group in grouped]
-    color = [group[0].hour for group in grouped]
+    x = pd.Series([group[0].hour for group in grouped])
+    color = [str(group[0].hour) + ":00" for group in grouped]
 
-    dtplot.add_trace(go.Bar(x=x, y=y))
+    temp = go.bar.Marker(cauto=True, cmax=0, cmin=23, colorscale="Viridis_r")
+
+    dtplot.add_trace(go.Bar(x=color, y=y, marker=temp))
     dtplot.update_layout(title="Select any of the bars on the histogram to section data by time.")
     dtplot.update_layout(bargap=0)
-    temp = go.layout.Colorscale(sequential="viridis", diverging="viridis", sequentialminus="viridis")
-    dtplot.update_coloraxes(colorscale='Viridis')
+    dtplot.update_coloraxes(cmin=0, cmax=23, colorscale="viridis_r", showscale=True)
+
     return dtplot
 
 
 @app.callback(
     Output('time-plot', 'figure'),
-    [Input('day-num', 'value')])
-def make_plot(N):
-    return make_timeplot(UberData, datetime.datetime(year=2014, month=4, day=N))
+    [Input('date-pick', 'date')]
+)
+def make_plot(date):
+    temp_day = datetime.date.fromisoformat(date)
+    return make_timeplot(UberData, datetime.datetime(year=2014, month=4, day=temp_day.day))
 
 
 @app.callback(
@@ -103,7 +104,6 @@ def make_map(mapIn):
 
 
 # -------------------------- MAIN ---------------------------- #
-
 
 # This is the code that gets run when we call this file from the terminal
 # The port number can be changed to fit your particular needs
