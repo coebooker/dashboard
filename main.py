@@ -78,10 +78,9 @@ def make_timeplot(data, date):
 
     temp = go.bar.Marker(cauto=True, cmax=0, cmin=23, colorscale="Viridis_r")
 
-    dtplot.add_trace(go.Bar(x=color, y=y, marker=temp))
+    dtplot.add_trace(go.Histogram(x nbinsx=24))
     dtplot.update_layout(title="Select any of the bars on the histogram to section data by time.")
     dtplot.update_layout(bargap=0)
-    dtplot.update_coloraxes(cmin=0, cmax=23, colorscale="viridis_r", showscale=True)
 
     return dtplot
 
