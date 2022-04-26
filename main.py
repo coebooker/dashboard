@@ -28,31 +28,34 @@ app.config.suppress_callback_exceptions = True
 ################# Layout ########################
 #################################################
 
-app.layout = html.Div([
+app.layout = html.Div(style=dict([('display','flex'),('flex-direction','row'),("background-color", "black"), ("color", 'white')]), children=[
+    html.Div(style=dict([('height',800), ('width', 200)]), children=[
+        html.H3(children='Dash-Uber Data App'),
+        html.H6(
+            children='Select different days using the date picker or by selecting different time frames on the histogram.'),
 
-    html.H3(children='Dash-Uber Data App'),
-    html.H6(children='Select different days using the date picker or by selecting different time frames on the histogram.'),
+        html.Div([
+            dcc.DatePickerSingle(date=datetime.date.fromisoformat("2014-04-01"), id='date-pick')
+        ]),
 
-    html.Div([
-        dcc.DatePickerSingle(date=datetime.date.fromisoformat("2014-04-01"), id='date-pick')
+        html.Div([
+            dcc.Input(id='map-in', type='number', debounce=True)
+        ]),
+
+        html.Div([
+            dcc.Dropdown(options=[dict(label=str(i) + ":00", value=i) for i in range(0, 24)],
+                         placeholder="Select Certain Hours",
+                         multi=True)
+        ]),
     ]),
 
-    html.Div([
-        dcc.Input(id='map-in', type='number', debounce=True)
-    ]),
+    html.Div(children=
+    [
+        dcc.Graph(id='map-fig'),
 
-    html.Div([
-        dcc.Dropdown(options=[dict(label=str(i)+":00", value=i) for i in range(0, 24)],
-                     placeholder="Select Certain Hours",
-                     multi=True)
-    ]),
+        dcc.Graph(id='time-plot'),
 
-    html.Br(),
-
-    dcc.Graph(id='map-fig'),
-
-    dcc.Graph(id='time-plot'),
-
+    ], style=dict([('display','flex'),('flex-direction','row')]))
 ])
 
 #####################
@@ -68,12 +71,12 @@ def map_func(df):
     px.set_mapbox_access_token(open("mapbox_token.txt").read())
     fig = px.scatter_mapbox(df, lat="Lat", lon="Lon", color="Date/Time",
                             color_continuous_scale=px.colors.cyclical.IceFire, size_max=15, zoom=10)
-    fig.update_layout(title="Map Output")
-    return fig 
+    fig.update_layout(title="Map Output", height=400)
+
+    return fig
 
 
 def make_timeplot(data, date):
-
     dtplot = go.Figure()
 
     day = pd.Grouper(key="Date/Time", freq="D")
@@ -85,7 +88,7 @@ def make_timeplot(data, date):
     x = [group[0].hour for group in grouped]
 
     yString = [str(i) for i in y]
-    xString = [str(i)+":00" for i in range(0, 24)]
+    xString = [str(i) + ":00" for i in range(0, 24)]
 
     mark = go.bar.Marker(color=x,
                          colorscale='viridis_r')
@@ -98,16 +101,19 @@ def make_timeplot(data, date):
 
     dtplot.update_layout(title="Select any of the bars on the histogram to section data by time.")
     dtplot.update_layout(bargap=0,
+                         height=400,
                          margin=dict(t=25),
                          font=dict(color='white'),
                          paper_bgcolor='dimgray',
                          plot_bgcolor='dimgray')
+
     dtplot.update_traces(text=yString,
-                         textposition='outside')
+                         textposition='outside',
+                         hoverinfo='x')
+
     dtplot.update_yaxes(showticklabels=False,
                         showgrid=False)
     dtplot.update_xaxes(showgrid=False)
-
 
     return dtplot
 
@@ -125,7 +131,6 @@ def make_plot(date):
 @app.callback(Output('map-fig', 'figure'), [Input('date-pick', 'useless')])
 def make_map(useless):
     return map_func(UberData)
-
 
 
 # -------------------------- MAIN ---------------------------- #
