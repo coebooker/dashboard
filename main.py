@@ -57,12 +57,13 @@ UberData["Date/Time"] = pd.to_datetime(UberData["Date/Time"])
 
 
 def map_func():
-    px.set_mapbox_access_token(open(".mapbox_token").read())
-    df = UberData
-    fig = px.scatter_mapbox(df, lat="centroid_lat", lon="centroid_lon", color="peak_hour", size="car_hours",
+    print(open("mapbox_token.txt").read())
+    px.set_mapbox_access_token(open("mapbox_token.txt").read())
+    df = data.head
+    fig = px.scatter_mapbox(df, lat="Lat", lon="Lon", color="Date/Time",
                             color_continuous_scale=px.colors.cyclical.IceFire, size_max=15, zoom=10)
-    return fig
-
+    fig.update_layout(title="Map Output")
+    return fig 
 
 def make_timeplot(data, date):
 
@@ -97,10 +98,10 @@ def make_plot(date):
     return make_timeplot(UberData, datetime.datetime(year=2014, month=4, day=temp_day.day))
 
 
-@app.callback(
-    Output('map-fig', 'figure'),
-    [Input('map-in', 'value')]
-)
+@app.callback(Output('map-fig', 'children'), [Input('score', 'value')])
+def make_map():
+    return map_func()
+
 def make_map(mapIn):
     return map_func()
 
