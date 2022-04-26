@@ -28,35 +28,37 @@ app.config.suppress_callback_exceptions = True
 ################# Layout ########################
 #################################################
 
-app.layout = html.Div(style=dict([('display','flex'),('flex-direction','row'),("background-color", "black"), ("color", 'white')]), children=[
-    html.Div(style=dict([('height',800), ('width', 200)]), children=[
-        html.H3(children='Dash-Uber Data App'),
-        html.H6(
-            children='Select different days using the date picker or by selecting different time frames on the histogram.'),
+app.layout = html.Div(
+    style=dict([('display', 'flex'), ("background-color", "black"), ("color", 'white')]),
+    children=[
+        html.Div(style=dict([('height', 800), ('width', 800)]), children=[
+            html.H3(children='Dash-Uber Data App'),
+            html.H6(
+                children='Select different days using the date picker or by selecting different time frames on the histogram.'),
 
-        html.Div([
-            dcc.DatePickerSingle(date=datetime.date.fromisoformat("2014-04-01"), id='date-pick')
+            html.Div([
+                dcc.DatePickerSingle(date=datetime.date.fromisoformat("2014-04-01"), id='date-pick')
+            ]),
+
+            html.Div([
+                dcc.Input(id='map-in', type='number', debounce=True)
+            ]),
+
+            html.Div([
+                dcc.Dropdown(options=[dict(label=str(i) + ":00", value=i) for i in range(0, 24)],
+                             placeholder="Select Certain Hours",
+                             multi=True)
+            ]),
         ]),
 
-        html.Div([
-            dcc.Input(id='map-in', type='number', debounce=True)
-        ]),
+        html.Div(children=
+        [
+            dcc.Graph(id='map-fig'),
 
-        html.Div([
-            dcc.Dropdown(options=[dict(label=str(i) + ":00", value=i) for i in range(0, 24)],
-                         placeholder="Select Certain Hours",
-                         multi=True)
-        ]),
-    ]),
+            dcc.Graph(id='time-plot'),
 
-    html.Div(children=
-    [
-        dcc.Graph(id='map-fig'),
-
-        dcc.Graph(id='time-plot'),
-
-    ], style=dict([('display','flex'),('flex-direction','row')]))
-])
+        ], style=dict([('display', 'flex')]))
+    ])
 
 #####################
 #  Make Basic Plot  #
@@ -71,7 +73,8 @@ def map_func(df):
     px.set_mapbox_access_token(open("mapbox_token.txt").read())
     fig = px.scatter_mapbox(df, lat="Lat", lon="Lon", color="Date/Time",
                             color_continuous_scale=px.colors.cyclical.IceFire, size_max=15, zoom=10)
-    fig.update_layout(title="Map Output", height=400)
+    fig.update_layout(title="Map Output", height=400, paper_bgcolor='dimgray',
+                         plot_bgcolor='dimgray')
 
     return fig
 
