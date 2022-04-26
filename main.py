@@ -59,7 +59,7 @@ UberData["Date/Time"] = pd.to_datetime(UberData["Date/Time"])
 def map_func():
     print(open("mapbox_token.txt").read())
     px.set_mapbox_access_token(open("mapbox_token.txt").read())
-    df = data.head
+    df = UberData.head
     fig = px.scatter_mapbox(df, lat="Lat", lon="Lon", color="Date/Time",
                             color_continuous_scale=px.colors.cyclical.IceFire, size_max=15, zoom=10)
     fig.update_layout(title="Map Output")
@@ -75,16 +75,29 @@ def make_timeplot(data, date):
     grouped = data.groupby(day).get_group(date).groupby(hour)
 
     y = [group[1]["Date/Time"].count() for group in grouped]
+    yString = [str(i) for i in y]
     x = [group[0].hour for group in grouped]
-    X_BINS = [str(i)+":00" for i in range(0,24)]
+    X_BINS = [str(i)+":00" for i in range(0, 24)]
 
-    mark = go.bar.Marker(color=x, colorscale='viridis_r')
+    mark = go.bar.Marker(color=x,
+                         colorscale='viridis_r')
+
     temp = go.Bar(x=X_BINS, y=y, marker=mark)
-    #temp = go.Histogram(x=grouped["Date/Time"], nbinsx=24, histfunc='count', marker=go.histogram.Marker(cauto=True, colorscale="Viridis_r"))
 
     dtplot.add_trace(temp)
+
     dtplot.update_layout(title="Select any of the bars on the histogram to section data by time.")
-    dtplot.update_layout(bargap=0)
+    dtplot.update_layout(bargap=0,
+                         margin=dict(t=25),
+                         font=dict(color='white'),
+                         paper_bgcolor='dimgray',
+                         plot_bgcolor='dimgray')
+    dtplot.update_traces(text=yString,
+                         textposition='outside')
+    dtplot.update_yaxes(showticklabels=False,
+                        showgrid=False)
+    dtplot.update_xaxes(showgrid=False)
+
 
     return dtplot
 
@@ -95,12 +108,13 @@ def make_timeplot(data, date):
 )
 def make_plot(date):
     temp_day = datetime.date.fromisoformat(date)
-    return make_timeplot(UberData, datetime.datetime(year=2014, month=4, day=temp_day.day))
+    return make_timeplot(UberData, temp_day)
 
 
 @app.callback(Output('map-fig', 'children'), [Input('score', 'value')])
 def make_map():
     return map_func()
+
 
 def make_map(mapIn):
     return map_func()
