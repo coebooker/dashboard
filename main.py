@@ -38,7 +38,13 @@ app.layout = html.Div([
     ]),
 
     html.Div([
-        dcc.Input(id='map-in', value=0, type='number', debounce=True)
+        dcc.Input(id='map-in', type='number', debounce=True)
+    ]),
+
+    html.Div([
+        dcc.Dropdown(options=[dict(label=str(i)+":00", value=i) for i in range(0, 24)],
+                     placeholder="Select Certain Hours",
+                     multi=True)
     ]),
 
     html.Br(),
@@ -65,6 +71,7 @@ def map_func():
     fig.update_layout(title="Map Output")
     return fig 
 
+
 def make_timeplot(data, date):
 
     dtplot = go.Figure()
@@ -75,14 +82,17 @@ def make_timeplot(data, date):
     grouped = data.groupby(day).get_group(date).groupby(hour)
 
     y = [group[1]["Date/Time"].count() for group in grouped]
-    yString = [str(i) for i in y]
     x = [group[0].hour for group in grouped]
-    X_BINS = [str(i)+":00" for i in range(0, 24)]
+
+    yString = [str(i) for i in y]
+    xString = [str(i)+":00" for i in range(0, 24)]
 
     mark = go.bar.Marker(color=x,
                          colorscale='viridis_r')
 
-    temp = go.Bar(x=X_BINS, y=y, marker=mark)
+    temp = go.Bar(x=xString,
+                  y=y,
+                  marker=mark)
 
     dtplot.add_trace(temp)
 
@@ -108,6 +118,7 @@ def make_timeplot(data, date):
 )
 def make_plot(date):
     temp_day = datetime.date.fromisoformat(date)
+    temp_day = datetime.datetime(temp_day.year, temp_day.month, temp_day.day)
     return make_timeplot(UberData, temp_day)
 
 
