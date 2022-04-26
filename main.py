@@ -77,8 +77,8 @@ def make_timeplot(data, date):
     x = [group[0].hour for group in grouped]
     X_BINS = [str(i)+":00" for i in range(0,24)]
 
-    temp = go.Bar(x=X_BINS, y=y)
-
+    mark = go.bar.Marker(color=x, colorscale='viridis_r')
+    temp = go.Bar(x=X_BINS, y=y, marker=mark)
     #temp = go.Histogram(x=grouped["Date/Time"], nbinsx=24, histfunc='count', marker=go.histogram.Marker(cauto=True, colorscale="Viridis_r"))
 
     dtplot.add_trace(temp)
