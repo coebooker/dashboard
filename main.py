@@ -143,7 +143,7 @@ def make_plot(date):
 
 
 @app.callback(Output('map-fig', 'figure'),
-              [Input('date-pick', 'useless')])
+              [Input('date-pick', 'date')])
 def make_map(useless):
     return map_func(UberData)
 
