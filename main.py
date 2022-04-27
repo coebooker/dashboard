@@ -32,20 +32,20 @@ app.layout = html.Div(
     style=dict([('padding', '20px'), ('display', 'flex'), ("background-color", "#2F2F2E"), ("color", 'white')]),
     children=[
         html.Div(style=dict([('padding', '30px')]), children=[
-            html.H3(children='Dash-Uber Data App'),
+            html.H3(children='DASH-UBER DATA APP', style=    dict([('font-family', 'open sans'), ('font-weight', 700), ('letter-spacing', '2.1px'), ('font-size', '21px'), ('padding-left', '12px')])),
             html.Tbody(
                 children='Select different days using the date picker or \nby selecting different time frames on '
                          'the histogram.'),
 
-            html.Div([
+            html.Div(style=dict([('padding', '15px')]), children=[
                 dcc.DatePickerSingle(date=datetime.date.fromisoformat("2014-04-01"), id='date-pick')
             ]),
 
-            html.Div([
+            html.Div(style=dict([('padding', '15px')]), children=[
                 dcc.Input(id='map-in', type='number', debounce=True)
             ]),
 
-            html.Div([
+            html.Div(style=dict([('padding', '15px')]), children=[
                 dcc.Dropdown(options=[dict(label=str(i) + ":00", value=i) for i in range(0, 24)],
                              placeholder="Select Certain Hours",
                              multi=True)
@@ -53,13 +53,13 @@ app.layout = html.Div(
         ]),
 
         html.Div(children=[
-            dcc.Graph(id='map-fig'),
+            dcc.Graph(style=dict([('padding', '0px')]), id='map-fig'),
             dcc.Graph(id='time-plot')
         ])
     ])
 
 #####################
-#  Make Basic Plot  #
+#  Make Plot  #
 #####################
 UberData = pd.read_csv('uber-trip-data/uber-raw-data-apr14.csv')
 UberData["Date/Time"] = pd.to_datetime(UberData["Date/Time"])
