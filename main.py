@@ -29,13 +29,15 @@ app.config.suppress_callback_exceptions = True
 #################################################
 
 app.layout = html.Div(
-    style=dict([('padding', '20px'), ('display', 'flex'), ("background-color", "#2F2F2E"), ("color", 'white')]),
+    style=dict([('responsive', True), ('display', 'flex'), ("background-color", "#2F2F2E"), ("color", 'white')]),
     children=[
         html.Div(style=dict([('padding', '30px')]), children=[
-            html.H3(children='DASH-UBER DATA APP', style=    dict([('font-family', 'open sans'), ('font-weight', 700), ('letter-spacing', '2.1px'), ('font-size', '21px'), ('padding-left', '12px')])),
-            html.Tbody(
-                children='Select different days using the date picker or \nby selecting different time frames on '
-                         'the histogram.'),
+            html.H3(children='DASH-UBER DATA APP', style=dict(
+                [('font-family', 'open sans'), ('font-weight', 700), ('letter-spacing', '2.1px'), ('font-size', '21px'),
+                 ('padding-left', '12px')])),
+            html.Tbody(style=dict([('padding-left', '30px')]),
+                       children='Select different days using the date picker or \nby selecting different time frames on '
+                                'the histogram.'),
 
             html.Div(style=dict([('padding', '15px')]), children=[
                 dcc.DatePickerSingle(date=datetime.date.fromisoformat("2014-04-01"), id='date-pick')
@@ -48,13 +50,13 @@ app.layout = html.Div(
             html.Div(style=dict([('padding', '15px')]), children=[
                 dcc.Dropdown(options=[dict(label=str(i) + ":00", value=i) for i in range(0, 24)],
                              placeholder="Select Certain Hours",
-                             multi=True)
+                             multi=True, style=dict([('color', 'black')]))
             ])
         ]),
 
-        html.Div(children=[
-            dcc.Graph(style=dict([('padding', '0px')]), id='map-fig'),
-            dcc.Graph(id='time-plot')
+        html.Div(style=dict([('responsive', True)]), children=[
+            dcc.Graph(style=dict([('responsive', True)]), id='map-fig'),
+            dcc.Graph(style=dict([('responsive', True)]), id='time-plot')
         ])
     ])
 
@@ -75,7 +77,7 @@ def map_func(df):
                             color="Date/Time",
                             color_continuous_scale=px.colors.cyclical.IceFire,
                             size_max=15, zoom=10)
-    fig.update_layout(title="Map Output", height=400, paper_bgcolor='dimgray',
+    fig.update_layout(title="Map Output", paper_bgcolor='dimgray',
                       plot_bgcolor='dimgray')
 
     return fig
@@ -106,19 +108,22 @@ def make_timeplot(data, date):
 
     dtplot.update_layout(title="Select any of the bars on the histogram to section data by time.")
     dtplot.update_layout(bargap=0,
-                         height=400,
                          margin=dict(t=27),
                          font=dict(color='white'),
                          paper_bgcolor='dimgray',
-                         plot_bgcolor='dimgray')
+                         plot_bgcolor='dimgray',
+                         height=400,
+                         width=600)
 
     dtplot.update_traces(text=yString,
                          textposition='outside',
                          hoverinfo='x')
 
     dtplot.update_yaxes(showticklabels=False,
-                        showgrid=False)
-    dtplot.update_xaxes(showgrid=False)
+                        showgrid=False,
+                        fixedrange=True)
+    dtplot.update_xaxes(showgrid=False,
+                        fixedrange=True)
 
     return dtplot
 
@@ -128,7 +133,6 @@ def make_timeplot(data, date):
     [Input('date-pick', 'date')])
 def make_plot(date):
     temp_day = datetime.date.fromisoformat(date)
-    temp_day = datetime.datetime(temp_day.year, temp_day.month, temp_day.day)
     return make_timeplot(UberData, temp_day)
 
 
