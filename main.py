@@ -73,8 +73,17 @@ UberData = pd.read_csv('uber-trip-data/uber-raw-data-apr14.csv')
 UberData["Date/Time"] = pd.to_datetime(UberData["Date/Time"])
 
 
-def map_func(df, date):
-    df = df.head(50)
+def map_func(df, date,time):
+    dt_lst = []
+    if time is None:
+        time = [0]
+    for timeVal in time:
+        if timeVal < 10:
+            dtStr = date + " 00:0"+str(timeVal)+":00"
+        else:
+            dtStr = date+" 00:"+str(timeVal)+":00"
+        dt_lst.append(dtStr)
+    df = UberData[UberData['Date/Time'].isin(dt_lst)] 
     px.set_mapbox_access_token(open("mapbox_token.txt").read())
     fig = px.scatter_mapbox(df,
                             lat="Lat",
@@ -83,7 +92,7 @@ def map_func(df, date):
                             color_continuous_scale=px.colors.cyclical.IceFire,
                             size_max=15, zoom=10)
     fig.update_layout(title="Map Output", paper_bgcolor='dimgray',
-                      plot_bgcolor='dimgray')
+                      plot_bgcolor='dimgray', coloraxis_showscale=False)
     fig.update_layout(bargap=0,
                       margin=dict(t=27, l=2, r=2, b=27),
                       font=dict(color='white'),
@@ -156,9 +165,9 @@ def make_plot(date, time):
 
 
 @app.callback(Output('map-fig', 'figure'),
-              [Input('date-pick', 'date')])
-def make_map(date):
-    return map_func(UberData, date)
+              [Input('date-pick', 'date'), Input('time-pick', 'value')])
+def make_map(date,time):
+    return map_func(UberData, date, time)
 
 
 # -------------------------- MAIN ---------------------------- #
