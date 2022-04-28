@@ -24,6 +24,14 @@ server = app.server
 # Do not bother us with exceptions
 app.config.suppress_callback_exceptions = True
 
+UberData = pd.read_csv('uber-trip-data/uber-raw-data-apr14.csv')
+UberData["Date/Time"] = pd.to_datetime(UberData["Date/Time"])
+base_lookup = dict(
+    [('B02512', 'Unter'), ('B02598', 'Hinter'), ('B02617', 'Weiter'), ('B02682', 'Schmecken'), ('B02764', 'Danach-NY'),
+     ('B02835', 'Dreist'), ('B02836', 'Drinnen')])
+base_for_picker= dict( [('Unter', 'Unter'), ('Hinter', 'Hinter'), ('Weiter', 'Weiter'), ('Schmecken', 'Schmecken'), ('Danach-NY', 'Danach-NY'),
+     ('Dreist', 'Dreist'), ('Drinnen', 'Drinnen')])
+
 #################################################
 ################# Layout ########################
 #################################################
@@ -53,15 +61,30 @@ app.layout = html.Div([
                          placeholder="Select Certain Hours",
                          multi=True,
                          style=dict([('color', 'black')]))
-        ], style=dict([('padding', '15px')]))
-    ], style=dict([('padding', '30px'), ('max-width', '450px')]), ),
+        ], style=dict([('padding', '15px')])),
+        html.Div([
+            dcc.Dropdown(id='base-pick', options=base_for_picker,
+                         placeholder="Select Base",
+                         multi=True,
+                         style=dict([('color', 'black')]))
+        ], style=dict([('padding', '15px')])),
+        html.Tbody('', id='test-out',
+                   style=dict([('padding-left', '30px')])),
+
+    ], style=dict([('padding', '30px')]), ),
 
     html.Div([
-        dcc.Graph(id='map-fig'),
-        html.Tbody(children="Select any of the bars on the histogram to section data by time."),
+        html.Div([
+            dcc.Graph(id='map-fig'),
+            dcc.Graph(id='base-plot')
+        ], style=dict([('display', 'flex'), ('flex-direction', 'row')])),
+
+        html.Tbody(children="Select any of the bars on the histogram to section data by time.",
+                   style=dict([('background-color', '#2F2F2E')])),
         dcc.Graph(id='time-plot')
     ], style=dict(
-        [('responsive', True), ("background-color", "dimgray"), ('display', 'flex'), ('flex-direction', 'column')]))
+        [('responsive', True), ("background-color", "dimgray"), ('display', 'flex'), ('flex-direction', 'column')])),
+
 ],
     style=dict([('responsive', True), ('display', 'flex'), ('flex-direction', 'row'), ("background-color", "#2F2F2E"),
                 ("color", 'white'), ('padding', '0px')]))
@@ -69,9 +92,6 @@ app.layout = html.Div([
 #####################
 #  Make Plot  #
 #####################
-UberData = pd.read_csv('uber-trip-data/uber-raw-data-apr14.csv')
-UberData["Date/Time"] = pd.to_datetime(UberData["Date/Time"])
-
 
 def map_func(df, date,time):
     dt_lst = []
@@ -132,7 +152,7 @@ def make_timeplot(data, date, time):
                          font=dict(color='white'),
                          paper_bgcolor='dimgray',
                          plot_bgcolor='dimgray',
-                         width=600,
+                         width=1200,
                          height=400,
                          autosize=True)
 
@@ -151,15 +171,61 @@ def make_timeplot(data, date, time):
     return dtplot
 
 
-def selectBar(dtplot, time):
-    return dtplot.update_traces(selectedpoints=time, selector=dict(type='bar'),
-                                selected=dict(marker=dict(color='white')))
+def make_baseplot(UberData, temp_day, baseSelect):
+    bplot = go.Figure()
+
+    day = pd.Grouper(key="Date/Time", freq="D")
+    base = pd.Grouper(key="Base")
+    print(baseSelect)
+
+    grouped = UberData.groupby(day).get_group(temp_day).groupby(base)
+
+    y = [group[1].count()[1] for group in grouped]
+    x_raw = UberData["Base"].unique()
+    x = [base_lookup[i] for i in x_raw]
+
+    mark = go.bar.Marker(color=[i for i in range(0, len(x))],
+                         colorscale='viridis_r')
+
+    bplot.add_trace(go.Bar(x=x, y=y, marker=mark))
+
+    yString = [str(i) for i in y]
+
+    bplot.update_layout(bargap=0,
+                        margin=dict(t=27, l=2, r=2, b=27),
+                        font=dict(color='white'),
+                        paper_bgcolor='dimgray',
+                        plot_bgcolor='dimgray',
+                        width=600,
+                        height=400,
+                        autosize=True)
+
+    bplot.update_traces(text=yString,
+                        textposition='outside',
+                        hoverinfo='x',
+                        selectedpoints=baseSelect, selector=dict(type='bar'),
+                        selected=dict(marker=dict(color='white')))
+
+    bplot.update_yaxes(showticklabels=False,
+                       showgrid=False,
+                       fixedrange=True)
+    bplot.update_xaxes(showgrid=False,
+                       fixedrange=True)
+
+    return bplot
+
+
+@app.callback(Output('base-plot', 'figure'),
+              [Input('date-pick', 'date'), Input('base-pick', 'value')])
+def make_bplot(date, base):
+    temp_day = datetime.date.fromisoformat(date)
+    return make_baseplot(UberData, temp_day, base)
 
 
 @app.callback(
     Output('time-plot', 'figure'),
     [Input('date-pick', 'date'), Input('time-pick', 'value')])
-def make_plot(date, time):
+def make_tplot(date, time):
     temp_day = datetime.date.fromisoformat(date)
     return make_timeplot(UberData, temp_day, time)
 
