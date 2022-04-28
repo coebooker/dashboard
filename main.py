@@ -95,15 +95,19 @@ app.layout = html.Div([
 
 def map_func(df, date,time):
     dt_lst = []
+    #Fixes the base case for when time is passed in as NoneType
     if time is None:
         time = [0]
+    #Creates the Date/Time String for each hour on a particular day
     for timeVal in time:
         if timeVal < 10:
             dtStr = date + " 00:0"+str(timeVal)+":00"
         else:
             dtStr = date+" 00:"+str(timeVal)+":00"
         dt_lst.append(dtStr)
+    #Limits Dataframe to those particular hours on that particular day
     df = UberData[UberData['Date/Time'].isin(dt_lst)] 
+    #Accessing Mapbox Library/Creating Figure
     px.set_mapbox_access_token(open("mapbox_token.txt").read())
     fig = px.scatter_mapbox(df,
                             lat="Lat",
@@ -112,7 +116,7 @@ def map_func(df, date,time):
                             color_continuous_scale=px.colors.cyclical.IceFire,
                             size_max=15, zoom=10)
     fig.update_layout(title="Map Output", paper_bgcolor='dimgray',
-                      plot_bgcolor='dimgray', coloraxis_showscale=False)
+                      plot_bgcolor='dimgray')
     fig.update_layout(bargap=0,
                       margin=dict(t=27, l=2, r=2, b=27),
                       font=dict(color='white'),
