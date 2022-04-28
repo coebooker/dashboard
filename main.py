@@ -29,42 +29,42 @@ app.config.suppress_callback_exceptions = True
 #################################################
 
 app.layout = html.Div([
-        html.Div([
-            html.H3('DASH-UBER DATA APP',
-                    style=dict(
-                        [('font-family', 'open sans'), ('font-weight', 700), ('letter-spacing', '2.1px'),
-                         ('font-size', '21px'), ('padding-left', '12px')])),
+    html.Div([
+        html.H3('DASH-UBER DATA APP',
+                style=dict(
+                    [('font-family', 'open sans'), ('font-weight', 700), ('letter-spacing', '2.1px'),
+                     ('font-size', '21px'), ('padding-left', '12px')])),
 
-            html.Tbody(
-                'Select different days using the date picker or by selecting different time frames on '
-                'the histogram.',
-                style=dict([('padding-left', '30px')])),
-
-            html.Div([
-                dcc.DatePickerSingle(date=datetime.date.fromisoformat("2014-04-01"), id='date-pick')
-            ], style=dict([('padding', '15px')])),
-
-            html.Div([
-                dcc.Input(id='map-in', type='number', debounce=True)
-            ], style=dict([('padding', '15px')])),
-
-            html.Div([
-                dcc.Dropdown(options=[dict(label=str(i) + ":00", value=i) for i in range(0, 24)],
-                             placeholder="Select Certain Hours",
-                             multi=True,
-                             style=dict([('color', 'black')]))
-            ], style=dict([('padding', '15px')]))
-        ], style=dict([('padding', '30px'), ('max-width', '450px')]), ),
+        html.Tbody(
+            'Select different days using the date picker or by selecting different time frames on '
+            'the histogram.',
+            style=dict([('padding-left', '30px')])),
 
         html.Div([
-            dcc.Graph(id='map-fig'),
-            html.Tbody(children="Select any of the bars on the histogram to section data by time."),
-            dcc.Graph(id='time-plot')
-        ], style=dict(
-            [('responsive', True), ("background-color", "dimgray"), ('display', 'flex'), ('flex-direction', 'column')]))
-    ],
+            dcc.DatePickerSingle(date=datetime.date.fromisoformat("2014-04-01"), id='date-pick')
+        ], style=dict([('padding', '15px')])),
+
+        html.Div([
+            dcc.Input(id='map-in', type='number', debounce=True)
+        ], style=dict([('padding', '15px')])),
+
+        html.Div([
+            dcc.Dropdown(id='time-pick', options=[dict(label=str(i) + ":00", value=i) for i in range(0, 24)],
+                         placeholder="Select Certain Hours",
+                         multi=True,
+                         style=dict([('color', 'black')]))
+        ], style=dict([('padding', '15px')]))
+    ], style=dict([('padding', '30px'), ('max-width', '450px')]), ),
+
+    html.Div([
+        dcc.Graph(id='map-fig'),
+        html.Tbody(children="Select any of the bars on the histogram to section data by time."),
+        dcc.Graph(id='time-plot')
+    ], style=dict(
+        [('responsive', True), ("background-color", "dimgray"), ('display', 'flex'), ('flex-direction', 'column')]))
+],
     style=dict([('responsive', True), ('display', 'flex'), ('flex-direction', 'row'), ("background-color", "#2F2F2E"),
-                ("color", 'white'),('padding','0px')]))
+                ("color", 'white'), ('padding', '0px')]))
 
 #####################
 #  Make Plot  #
@@ -73,9 +73,7 @@ UberData = pd.read_csv('uber-trip-data/uber-raw-data-apr14.csv')
 UberData["Date/Time"] = pd.to_datetime(UberData["Date/Time"])
 
 
-def map_func(df):
-    dtplot = go.Figure()
-    print(open("mapbox_token.txt").read())
+def map_func(df, date):
     df = df.head(50)
     px.set_mapbox_access_token(open("mapbox_token.txt").read())
     fig = px.scatter_mapbox(df,
@@ -86,18 +84,18 @@ def map_func(df):
                             size_max=15, zoom=10)
     fig.update_layout(title="Map Output", paper_bgcolor='dimgray',
                       plot_bgcolor='dimgray')
-    dtplot.update_layout(bargap=0,
-    margin=dict(t=27, l=2, r=2, b=27),
-    font=dict(color='white'),
-    paper_bgcolor='dimgray',
-    plot_bgcolor='dimgray',
-    width=600,
-    height=400,
-    autosize=True)
+    fig.update_layout(bargap=0,
+                      margin=dict(t=27, l=2, r=2, b=27),
+                      font=dict(color='white'),
+                      paper_bgcolor='dimgray',
+                      plot_bgcolor='dimgray',
+                      width=600,
+                      height=400,
+                      autosize=True)
     return fig
 
 
-def make_timeplot(data, date):
+def make_timeplot(data, date, time):
     dtplot = go.Figure()
 
     day = pd.Grouper(key="Date/Time", freq="D")
@@ -131,7 +129,9 @@ def make_timeplot(data, date):
 
     dtplot.update_traces(text=yString,
                          textposition='outside',
-                         hoverinfo='x')
+                         hoverinfo='x',
+                         selectedpoints=time, selector=dict(type='bar'),
+                         selected=dict(marker=dict(color='white')))
 
     dtplot.update_yaxes(showticklabels=False,
                         showgrid=False,
@@ -142,18 +142,23 @@ def make_timeplot(data, date):
     return dtplot
 
 
+def selectBar(dtplot, time):
+    return dtplot.update_traces(selectedpoints=time, selector=dict(type='bar'),
+                                selected=dict(marker=dict(color='white')))
+
+
 @app.callback(
     Output('time-plot', 'figure'),
-    [Input('date-pick', 'date')])
-def make_plot(date):
+    [Input('date-pick', 'date'), Input('time-pick', 'value')])
+def make_plot(date, time):
     temp_day = datetime.date.fromisoformat(date)
-    return make_timeplot(UberData, temp_day)
+    return make_timeplot(UberData, temp_day, time)
 
 
 @app.callback(Output('map-fig', 'figure'),
               [Input('date-pick', 'date')])
-def make_map(useless):
-    return map_func(UberData)
+def make_map(date):
+    return map_func(UberData, date)
 
 
 # -------------------------- MAIN ---------------------------- #
