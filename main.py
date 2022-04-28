@@ -74,6 +74,7 @@ UberData["Date/Time"] = pd.to_datetime(UberData["Date/Time"])
 
 
 def map_func(df):
+    dtplot = go.Figure()
     print(open("mapbox_token.txt").read())
     df = df.head(50)
     px.set_mapbox_access_token(open("mapbox_token.txt").read())
@@ -85,7 +86,14 @@ def map_func(df):
                             size_max=15, zoom=10)
     fig.update_layout(title="Map Output", paper_bgcolor='dimgray',
                       plot_bgcolor='dimgray')
-
+    dtplot.update_layout(bargap=0,
+    margin=dict(t=27, l=2, r=2, b=27),
+    font=dict(color='white'),
+    paper_bgcolor='dimgray',
+    plot_bgcolor='dimgray',
+    width=600,
+    height=400,
+    autosize=True)
     return fig
 
 
